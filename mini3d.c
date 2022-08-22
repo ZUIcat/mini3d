@@ -331,6 +331,7 @@ void vertex_interp(vertex_t *y, const vertex_t *x1, const vertex_t *x2, float t)
 	y->rhw = interp(x1->rhw, x2->rhw, t);
 }
 
+// 求两个 vert 之间的步长
 void vertex_division(vertex_t *y, const vertex_t *x1, const vertex_t *x2, float w) {
 	float inv = 1.0f / w;
 	y->pos.x = (x2->pos.x - x1->pos.x) * inv;
@@ -359,8 +360,12 @@ void vertex_add(vertex_t *y, const vertex_t *x) {
 }
 
 // 根据三角形生成 0-2 个梯形，并且返回合法梯形的数量
-int trapezoid_init_triangle(trapezoid_t *trap, const vertex_t *p1, 
-	const vertex_t *p2, const vertex_t *p3) {
+int trapezoid_init_triangle(
+	trapezoid_t *trap,
+	const vertex_t *p1,
+	const vertex_t *p2,
+	const vertex_t *p3
+) {
 	const vertex_t *p;
 	float k, x;
 
@@ -378,7 +383,7 @@ int trapezoid_init_triangle(trapezoid_t *trap, const vertex_t *p1,
 		trap[0].left.v2 = *p3;
 		trap[0].right.v1 = *p2;
 		trap[0].right.v2 = *p3;
-		return (trap[0].top < trap[0].bottom)? 1 : 0;
+		return (trap[0].top < trap[0].bottom)? 1 : 0; // TODO 这会有条件不满足吗？
 	}
 
 	if (p2->pos.y == p3->pos.y) {	// triangle up
@@ -397,7 +402,7 @@ int trapezoid_init_triangle(trapezoid_t *trap, const vertex_t *p1,
 	trap[1].top = p2->pos.y;
 	trap[1].bottom = p3->pos.y;
 
-	k = (p3->pos.y - p1->pos.y) / (p2->pos.y - p1->pos.y);
+	k = (p3->pos.y - p1->pos.y) / (p2->pos.y - p1->pos.y); // TODO 不懂
 	x = p1->pos.x + (p2->pos.x - p1->pos.x) * k;
 
 	if (x <= p3->pos.x) {		// triangle left
@@ -436,7 +441,7 @@ void trapezoid_edge_interp(trapezoid_t *trap, float y) {
 // 根据左右两边的端点，初始化计算出扫描线的起点和步长
 void trapezoid_init_scan_line(const trapezoid_t *trap, scanline_t *scanline, int y) {
 	float width = trap->right.v.pos.x - trap->left.v.pos.x;
-	scanline->x = (int)(trap->left.v.pos.x + 0.5f);
+	scanline->x = (int)(trap->left.v.pos.x + 0.5f); // +0.5f 再 (int)，这是四舍五入
 	scanline->w = (int)(trap->right.v.pos.x + 0.5f) - scanline->x;
 	scanline->y = y;
 	scanline->v = trap->left.v;
@@ -468,7 +473,7 @@ typedef struct {
 #define RENDER_STATE_TEXTURE        2		// 渲染纹理
 #define RENDER_STATE_COLOR          4		// 渲染颜色
 
-// 设备初始化，fb为外部帧缓存，非 NULL 将引用外部帧缓存（每行 4字节对齐）
+// 设备初始化，fb 为外部帧缓存，非 NULL 将引用外部帧缓存（每行 4 字节对齐）
 void device_init(device_t *device, int width, int height, void *fb) {
 	int need = sizeof(void*) * (height * 2 + 1024) + width * height * 8;
 	char *ptr = (char*)malloc(need + 64);
