@@ -383,10 +383,6 @@ int trapezoid_init_triangle(
 		trap[0].left.v2 = *p3;
 		trap[0].right.v1 = *p2;
 		trap[0].right.v2 = *p3;
-		if (trap[0].top >= trap[0].bottom) {
-			float a;
-			printf("a");
-		}
 		return (trap[0].top < trap[0].bottom)? 1 : 0; // TODO 这会有条件不满足吗？
 	}
 
