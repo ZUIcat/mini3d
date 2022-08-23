@@ -337,7 +337,7 @@ void vertex_division(vertex_t *y, const vertex_t *x1, const vertex_t *x2, float 
 	y->pos.x = (x2->pos.x - x1->pos.x) * inv;
 	y->pos.y = (x2->pos.y - x1->pos.y) * inv;
 	y->pos.z = (x2->pos.z - x1->pos.z) * inv;
-	y->pos.w = (x2->pos.w - x1->pos.w) * inv;
+	y->pos.w = (x2->pos.w - x1->pos.w) * inv; // 这里应该没必要对 w 做处理
 	y->tc.u = (x2->tc.u - x1->tc.u) * inv;
 	y->tc.v = (x2->tc.v - x1->tc.v) * inv;
 	y->color.r = (x2->color.r - x1->color.r) * inv;
@@ -383,6 +383,10 @@ int trapezoid_init_triangle(
 		trap[0].left.v2 = *p3;
 		trap[0].right.v1 = *p2;
 		trap[0].right.v2 = *p3;
+		if (trap[0].top >= trap[0].bottom) {
+			float a;
+			printf("a");
+		}
 		return (trap[0].top < trap[0].bottom)? 1 : 0; // TODO 这会有条件不满足吗？
 	}
 
@@ -402,10 +406,14 @@ int trapezoid_init_triangle(
 	trap[1].top = p2->pos.y;
 	trap[1].bottom = p3->pos.y;
 
-	k = (p3->pos.y - p1->pos.y) / (p2->pos.y - p1->pos.y); // TODO 不懂
-	x = p1->pos.x + (p2->pos.x - p1->pos.x) * k;
+	//k = (p3->pos.y - p1->pos.y) / (p2->pos.y - p1->pos.y); // TODO 不懂
+	//x = p1->pos.x + (p2->pos.x - p1->pos.x) * k;
 
-	if (x <= p3->pos.x) {		// triangle left
+	k = (p2->pos.y - p1->pos.y) / (p3->pos.y - p1->pos.y);
+	x = p1->pos.x + (p3->pos.x - p1->pos.x) * k;
+
+	//if (x <= p3->pos.x) {		// triangle left
+	if (x >= p2->pos.x) {		// triangle left
 		trap[0].left.v1 = *p1;
 		trap[0].left.v2 = *p2;
 		trap[0].right.v1 = *p1;
