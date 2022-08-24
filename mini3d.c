@@ -479,8 +479,15 @@ typedef struct {
 
 // 设备初始化，fb 为外部帧缓存，非 NULL 将引用外部帧缓存（每行 4 字节对齐）
 void device_init(device_t *device, int width, int height, void *fb) {
-	int need = sizeof(void*) * (height * 2 + 1024) + width * height * 8;
-	char *ptr = (char*)malloc(need + 64);
+    int need = sizeof(void*) * (height * 2 + 1024) + width * height * 8;
+    // int need = sizeof(void*) * (height * 2 + 1024) + width * height * 4 * 2;
+    // height * sizeof(void *) // frame pointer
+    // height * sizeof(void *) // depth pointer
+    // 1024 * sizeof(void *)   // texture pointer
+    // width * height * sizeof(int) // frame data
+    // width * height * sizeof(float) // depth data
+    // 16 Byte 全 0
+    char* ptr = (char*)malloc(need + 64);
 	char *framebuf, *zbuf;
 	int j;
 	assert(ptr);
@@ -527,7 +534,7 @@ void device_set_texture(device_t *device, void *bits, long pitch, int w, int h) 
 	int j;
 	assert(w <= 1024 && h <= 1024);
 	for (j = 0; j < h; ptr += pitch, j++) 	// 重新计算每行纹理的指针
-		device->texture[j] = (IUINT32*)ptr;
+		device->texture[j] = (IUINT32*)ptr; // 若小于 1024 的话，可能会记录下无效指针？
 	device->tex_width = w;
 	device->tex_height = h;
 	device->max_u = (float)(w - 1);
@@ -539,7 +546,7 @@ void device_clear(device_t *device, int mode) {
 	int y, x, height = device->height;
 	for (y = 0; y < device->height; y++) {
 		IUINT32 *dst = device->framebuffer[y];
-		IUINT32 cc = (height - 1 - y) * 230 / (height - 1);
+		IUINT32 cc = (height - 1 - y) * 230 / (height - 1); // 用来搞渐变色的
 		cc = (cc << 16) | (cc << 8) | cc;
 		if (mode == 0) cc = device->background;
 		for (x = device->width; x > 0; dst++, x--) dst[0] = cc;
@@ -755,10 +762,33 @@ static LRESULT screen_events(HWND, UINT, WPARAM, LPARAM);
 
 // 初始化窗口并设置标题
 int screen_init(int w, int h, const TCHAR *title) {
-	WNDCLASS wc = { CS_BYTEALIGNCLIENT, (WNDPROC)screen_events, 0, 0, 0, 
-		NULL, NULL, NULL, NULL, _T("SCREEN3.1415926") };
-	BITMAPINFO bi = { { sizeof(BITMAPINFOHEADER), w, -h, 1, 32, BI_RGB, 
-		w * h * 4, 0, 0, 0, 0 }  };
+	WNDCLASS wc = {
+		CS_BYTEALIGNCLIENT,
+		(WNDPROC)screen_events,
+		0,
+		0,
+		0,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		_T("SCREEN3.1415926")
+	};
+	BITMAPINFO bi = {
+		{
+			sizeof(BITMAPINFOHEADER),
+			w,
+			-h,
+			1,
+			32,
+			BI_RGB,
+			w * h * 4,
+			0,
+			0,
+			0,
+			0
+		}
+	};
 	RECT rect = { 0, 0, w, h };
 	int wx, wy, sx, sy;
 	LPVOID ptr;
@@ -771,9 +801,19 @@ int screen_init(int w, int h, const TCHAR *title) {
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	if (!RegisterClass(&wc)) return -1;
 
-	screen_handle = CreateWindow(_T("SCREEN3.1415926"), title,
+	screen_handle = CreateWindow(
+		_T("SCREEN3.1415926"),
+		title,
 		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-		0, 0, 0, 0, NULL, NULL, wc.hInstance, NULL);
+		0,
+		0,
+		0,
+		0,
+		NULL,
+		NULL,
+		wc.hInstance,
+		NULL
+	);
 	if (screen_handle == NULL) return -2;
 
 	screen_exit = 0;
