@@ -627,12 +627,12 @@ void device_draw_scanline(device_t *device, scanline_t *scanline) {
 	int width = device->width;
 	int render_state = device->render_state;
 	for (; w > 0; x++, w--) {
-		if (x >= 0 && x < width) {
+		if (x >= 0 && x < width) { // TODO 这算啥 视口裁剪？
 			float rhw = scanline->v.rhw;
-			if (rhw >= zbuffer[x]) {	
+			if (rhw >= zbuffer[x]) {	// 深度测试
 				float w = 1.0f / rhw;
-				zbuffer[x] = rhw;
-				if (render_state & RENDER_STATE_COLOR) {
+				zbuffer[x] = rhw; // TODO 存的是 w(-z) 而不是 z(1/z) 吗
+				if (render_state & RENDER_STATE_COLOR) { // 颜色模式
 					float r = scanline->v.color.r * w;
 					float g = scanline->v.color.g * w;
 					float b = scanline->v.color.b * w;
@@ -644,7 +644,7 @@ void device_draw_scanline(device_t *device, scanline_t *scanline) {
 					B = CMID(B, 0, 255);
 					framebuffer[x] = (R << 16) | (G << 8) | (B);
 				}
-				if (render_state & RENDER_STATE_TEXTURE) {
+				if (render_state & RENDER_STATE_TEXTURE) { // 纹理模式
 					float u = scanline->v.tc.u * w;
 					float v = scanline->v.tc.v * w;
 					IUINT32 cc = device_texture_read(device, u, v);
