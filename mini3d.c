@@ -633,12 +633,14 @@ void device_draw_scanline(device_t *device, scanline_t *scanline) {
 	int w = scanline->w;
 	int width = device->width;
 	int render_state = device->render_state;
+
 	for (; w > 0; x++, w--) {
 		if (x >= 0 && x < width) { // TODO 这算啥 视口裁剪？
+
 			float rhw = scanline->v.rhw;
 			if (rhw >= zbuffer[x]) {	// 深度测试
 				float w = 1.0f / rhw;
-				zbuffer[x] = rhw; // TODO 存的是 w(-z) 而不是 z(1/z) 吗
+				zbuffer[x] = rhw; // 存的是 w（即 1 / z）
 				if (render_state & RENDER_STATE_COLOR) { // 颜色模式
 					float r = scanline->v.color.r * w;
 					float g = scanline->v.color.g * w;
