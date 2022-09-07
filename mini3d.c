@@ -640,7 +640,8 @@ void device_draw_scanline(device_t *device, scanline_t *scanline) {
 			float rhw = scanline->v.rhw;
 			if (rhw >= zbuffer[x]) {	// 深度测试
 				float w = 1.0f / rhw;
-				zbuffer[x] = rhw; // 存的是 w（即 1 / z）
+				zbuffer[x] = rhw; // 存的是 w（即 1 / -z）
+
 				if (render_state & RENDER_STATE_COLOR) { // 颜色模式
 					float r = scanline->v.color.r * w;
 					float g = scanline->v.color.g * w;
@@ -683,8 +684,7 @@ void device_render_trap(device_t *device, trapezoid_t *trap) {
 }
 
 // 根据 render_state 绘制原始三角形
-void device_draw_primitive(device_t *device, const vertex_t *v1, 
-	const vertex_t *v2, const vertex_t *v3) {
+void device_draw_primitive(device_t *device, const vertex_t *v1, const vertex_t *v2, const vertex_t *v3) {
 	point_t p1, p2, p3, c1, c2, c3;
 	int render_state = device->render_state;
 
