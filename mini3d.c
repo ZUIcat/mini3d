@@ -741,7 +741,7 @@ void device_draw_primitive(device_t *device, const vertex_t *v1, const vertex_t 
 //=====================================================================
 int screen_w, screen_h, screen_exit = 0;
 int screen_mx = 0, screen_my = 0, screen_mb = 0;
-int screen_keys[512];	// 当前键盘按下状态
+int screen_keys[512];					// 当前键盘按下状态
 static HWND screen_handle = NULL;		// 主窗口 HWND
 static HDC screen_dc = NULL;			// 配套的 HDC
 static HBITMAP screen_hb = NULL;		// DIB
@@ -764,31 +764,34 @@ static LRESULT screen_events(HWND, UINT, WPARAM, LPARAM);
 
 // 初始化窗口并设置标题
 int screen_init(int w, int h, const TCHAR *title) {
+	HINSTANCE hInstance = GetModuleHandle(NULL);
+
 	WNDCLASS wc = {
 		CS_BYTEALIGNCLIENT,
 		(WNDPROC)screen_events,
 		0,
 		0,
-		0,
+		hInstance,
 		NULL,
-		NULL,
-		NULL,
+		LoadCursor(NULL, IDC_ARROW),
+		(HBRUSH)GetStockObject(BLACK_BRUSH),
 		NULL,
 		_T("SCREEN3.1415926")
 	};
+
 	BITMAPINFO bi = {
 		{
-			sizeof(BITMAPINFOHEADER),
-			w,
-			-h,
-			1,
-			32,
-			BI_RGB,
-			w * h * 4,
-			0,
-			0,
-			0,
-			0
+			sizeof(BITMAPINFOHEADER), // biSize
+			w,						  // biWidth
+			-h,						  // biHeight
+			1,						  // biPlanes
+			32,						  // biBitCount
+			BI_RGB,					  // biCompression
+			w* h * 4,				  // biSizeImage
+			0,						  // biXPelsPerMeter
+			0,						  // biYPelsPerMeter
+			0,						  // biClrUsed
+			0						  // biClrImportant
 		}
 	};
 	RECT rect = { 0, 0, w, h };
@@ -798,9 +801,6 @@ int screen_init(int w, int h, const TCHAR *title) {
 
 	screen_close();
 
-	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-	wc.hInstance = GetModuleHandle(NULL);
-	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	if (!RegisterClass(&wc)) return -1;
 
 	screen_handle = CreateWindow(
